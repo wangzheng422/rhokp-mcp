@@ -77,6 +77,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if ! command -v skopeo >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y skopeo
+          fi
           mkdir -p "$RUNNER_TEMP/mcp-release"
           docker buildx create --name release-builder --driver docker-container --use
           docker buildx inspect --bootstrap
@@ -85,7 +89,11 @@ jobs:
             --label "org.opencontainers.image.version=$RELEASE_TAG" \
             --label "org.opencontainers.image.revision=$(git rev-parse HEAD)" \
             --tag "$IMAGE" --provenance=false \
-            --output "type=docker,oci-mediatypes=false,dest=$RUNNER_TEMP/mcp-release/image.tar" .
+            --output "type=docker,oci-mediatypes=false,dest=$RUNNER_TEMP/mcp-release/build.tar" .
+          # Recent BuildKit still writes a hybrid layout. Normalize through the
+          # explicit Docker transport so Podman preserves Docker Healthcheck.
+          skopeo copy --format v2s2 "docker-archive:$RUNNER_TEMP/mcp-release/build.tar" \
+            "docker-archive:$RUNNER_TEMP/mcp-release/image.tar:$IMAGE"
           python3 - <<'PY'
           import json, os, tarfile
           path = os.path.join(os.environ['RUNNER_TEMP'], 'mcp-release', 'image.tar')

@@ -23,7 +23,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 
 SERVER_NAME = "rhokp-mcp"
-SERVER_VERSION = "0.1.2"
+SERVER_VERSION = "0.1.3"
 SUPPORTED_PROTOCOL_VERSIONS = ("2025-11-25", "2025-06-18", "2025-03-26")
 MAX_REQUEST_BYTES = 1024 * 1024
 MAX_BACKEND_BYTES = 2 * 1024 * 1024
