@@ -1,0 +1,6 @@
+# AI-Author: Codex (OpenAI model not exposed by runtime)
+**
+!Containerfile
+!LICENSE
+!mcp/
+!mcp/rhokp_mcp_server.py

@@ -1,0 +1,35 @@
+# AI-Author: Codex (OpenAI model not exposed by runtime)
+[Unit]
+Description=Read-only MCP adapter for RHOKP
+Requires=rhokp.service
+After=rhokp.service
+
+[Container]
+# Replace with your own built/pinned MCP image when publishing to your registry.
+Image=ghcr.io/wangzheng422/rhokp-mcp:v0.1.0
+Pull=never
+ContainerName=rhokp-mcp
+Network=rhokp.network
+User=10001:0
+Secret=rhokp-mcp-token,type=mount,target=mcp_token,uid=10001,gid=0,mode=0400
+Environment=MCP_TOKEN_FILE=/run/secrets/mcp_token
+Environment=RHOKP_BASE_URL=http://rhokp:8080
+# Client-visible portal URL, not the private container DNS name.
+Environment=RHOKP_SOURCE_BASE_URL=http://127.0.0.1:18080
+Environment=RHOKP_IMAGE_DIGEST=sha256:2c57629dacc9ab3c5655d05baa4bbdd7415023f52e2f1915f4c4293f4d26326b
+Environment=RHOKP_SNAPSHOT_DATE=2026-08-04
+Exec=--host 0.0.0.0 --port 18081
+PublishPort=127.0.0.1:18081:18081/tcp
+ReadOnly=true
+NoNewPrivileges=true
+DropCapability=ALL
+
+[Service]
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=120
+MemoryMax=512M
+TasksMax=128
+
+[Install]
+WantedBy=multi-user.target

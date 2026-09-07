@@ -1,0 +1,116 @@
+# AI-Author: Codex (OpenAI model not exposed by runtime)
+name: Publish MCP release
+
+on:
+  release:
+    types: [published]
+
+permissions: {}
+
+concurrency:
+  group: mcp-release-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Validate release tag and derive artifact names
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import re
+          tag = os.environ['RELEASE_TAG']
+          number = r'(?:0|[1-9][0-9]*)'
+          identifier = rf'(?:{number}|[0-9]*[A-Za-z-][0-9A-Za-z-]*)'
+          pattern = rf'v{number}\.{number}\.{number}(?:-{identifier}(?:\.{identifier})*)?'
+          if len(tag) > 128 or re.fullmatch(pattern, tag) is None:
+              raise SystemExit('Tag must be vMAJOR.MINOR.PATCH with optional SemVer prerelease, no build metadata, and at most 128 characters')
+          repository = os.environ['GH_REPO'].lower()
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as output:
+              output.write(f'IMAGE=ghcr.io/{repository}:{tag}\n')
+              output.write(f'ARCHIVE=rhokp-mcp-{tag}-linux-amd64.tar.gz\n')
+              output.write(f'SOURCE_ARCHIVE=rhokp-mcp-{tag}-source.tar.gz\n')
+          PY
+
+      - name: Check out the release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          persist-credentials: false
+
+      - name: Run fixture tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -v
+          python3 -m unittest discover -s deploy/host -v
+
+      - name: Refuse to overwrite existing release assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release view "$RELEASE_TAG" --json assets > "$RUNNER_TEMP/release-assets.json"
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          data = json.loads((Path(os.environ['RUNNER_TEMP']) / 'release-assets.json').read_text())
+          expected = {os.environ['ARCHIVE'], os.environ['SOURCE_ARCHIVE'], 'SHA256SUMS'}
+          existing = {asset['name'] for asset in data['assets']}
+          if expected & existing:
+              raise SystemExit('Release assets already exist; review them manually before retrying. This workflow never overwrites assets.')
+          PY
+
+      - name: Build the MCP image and offline archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build --platform linux/amd64 --file Containerfile \
+            --label "org.opencontainers.image.source=https://github.com/$GH_REPO" \
+            --label "org.opencontainers.image.version=$RELEASE_TAG" \
+            --label "org.opencontainers.image.revision=$(git rev-parse HEAD)" \
+            --tag "$IMAGE" .
+          mkdir -p "$RUNNER_TEMP/mcp-release"
+          docker save "$IMAGE" | gzip -n > "$RUNNER_TEMP/mcp-release/$ARCHIVE"
+          git archive --format=tar --prefix="rhokp-mcp-$RELEASE_TAG/" HEAD | gzip -n > "$RUNNER_TEMP/mcp-release/$SOURCE_ARCHIVE"
+          cd "$RUNNER_TEMP/mcp-release"
+          sha256sum "$ARCHIVE" "$SOURCE_ARCHIVE" > SHA256SUMS
+          sha256sum --check SHA256SUMS
+
+      - name: Push the prebuilt image to GHCR
+        shell: bash
+        env:
+          REGISTRY_USER: ${{ github.actor }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$REGISTRY_USER" --password-stdin
+          docker push "$IMAGE"
+
+      - name: Upload offline release assets without overwriting
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release upload "$RELEASE_TAG" \
+            "$RUNNER_TEMP/mcp-release/$ARCHIVE" \
+            "$RUNNER_TEMP/mcp-release/$SOURCE_ARCHIVE" \
+            "$RUNNER_TEMP/mcp-release/SHA256SUMS"
+
+      - name: Log out of GHCR
+        if: always()
+        shell: bash
+        run: docker logout ghcr.io

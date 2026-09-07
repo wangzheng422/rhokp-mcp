@@ -1,0 +1,4 @@
+# AI-Author: Codex (OpenAI model not exposed by runtime)
+[Network]
+NetworkName=rhokp-private
+Internal=true

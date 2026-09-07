@@ -1,0 +1,26 @@
+# AI-Author: Codex (OpenAI model not exposed by runtime)
+[Unit]
+Description=Red Hat Offline Knowledge Portal
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+# Obtain this vendor image under your own Red Hat entitlement; do not redistribute it.
+Image=registry.redhat.io/offline-knowledge-portal/rhokp-rhel9@sha256:2c57629dacc9ab3c5655d05baa4bbdd7415023f52e2f1915f4c4293f4d26326b
+Pull=never
+ContainerName=rhokp
+Network=rhokp.network
+NetworkAlias=rhokp
+Secret=rhokp-access-key,type=env,target=ACCESS_KEY
+Environment=ONLINE_VIEW=false
+Environment=SOLR_MEM=4g
+PublishPort=127.0.0.1:18080:8080/tcp
+
+[Service]
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=900
+TimeoutStopSec=120
+
+[Install]
+WantedBy=multi-user.target
