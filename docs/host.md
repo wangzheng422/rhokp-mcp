@@ -37,15 +37,15 @@ These commands change the chosen host; execute them only after deployment approv
 Authenticate interactively to the vendor registry using `sudo podman login
 registry.redhat.io`, or a protected registry auth file. Never put passwords in
 arguments. Pull the exact vendor image from `rhokp.container` with `sudo podman
-pull IMAGE_REFERENCE`. For the MCP adapter use the [prebuilt release](../README.md#use-a-prebuilt-release): run `sudo podman pull ghcr.io/wangzheng422/rhokp-mcp:v0.1.1`. The Quadlet template uses that reference. For a downloaded archive use `sudo podman load` instead. Rootful Quadlet uses rootful image storage.
+pull IMAGE_REFERENCE`. For the MCP adapter use the [prebuilt release](../README.md#use-a-prebuilt-release): run `sudo podman pull ghcr.io/wangzheng422/rhokp-mcp:v0.1.2`. The Quadlet template uses that reference. For a downloaded archive use `sudo podman load` instead. Rootful Quadlet uses rootful image storage.
 
 For development or before the first public release, build the adapter locally:
 
 ```bash
-sudo podman build --format docker -t localhost/rhokp-mcp:0.1.1 -f Containerfile .
+sudo podman build --format docker -t localhost/rhokp-mcp:0.1.2 -f Containerfile .
 ```
 
-For a local build, set the MCP Quadlet `Image=` to `localhost/rhokp-mcp:0.1.1` before installing it.
+For a local build, set the MCP Quadlet `Image=` to `localhost/rhokp-mcp:0.1.2` before installing it.
 
 For a disconnected host, stage both images using your approved image-transfer
 process before startup. `Pull=never` deliberately prevents an unexpected pull.

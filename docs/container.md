@@ -9,20 +9,20 @@ remain separate prerequisites.
 
 ## Use the published image
 
-Pull `ghcr.io/wangzheng422/rhokp-mcp:v0.1.1`. Alternatively download `rhokp-mcp-v0.1.1-linux-amd64.tar.gz` and `SHA256SUMS` from [Releases](https://github.com/wangzheng422/rhokp-mcp/releases), check the checksum, decompress, and load with Podman. See [the README](../README.md#use-a-prebuilt-release) for commands. GitHub Actions produces the downloads; wait for a successful release workflow before downloading newly published versions.
+Pull `ghcr.io/wangzheng422/rhokp-mcp:v0.1.2`. Alternatively download `rhokp-mcp-v0.1.2-linux-amd64.tar.gz` and `SHA256SUMS` from [Releases](https://github.com/wangzheng422/rhokp-mcp/releases), check the checksum, decompress, and load with Podman. See [the README](../README.md#use-a-prebuilt-release) for commands. GitHub Actions produces the downloads; wait for a successful release workflow before downloading newly published versions.
 
-In the runtime example below, replace `localhost/rhokp-mcp:0.1.1` with your pulled release reference when using a prebuilt image.
+In the runtime example below, replace `localhost/rhokp-mcp:0.1.2` with your pulled release reference when using a prebuilt image.
 
 ## Build locally for development
 
 From the repository root:
 
 ```bash
-podman build --format docker -t localhost/rhokp-mcp:0.1.1 -f Containerfile .
+podman build --format docker -t localhost/rhokp-mcp:0.1.2 -f Containerfile .
 python3 -m unittest discover -s tests -v
 ```
 
-To transfer a built image without a registry, use `podman save --format docker-archive -o rhokp-mcp.tar localhost/rhokp-mcp:0.1.1` and `podman load -i rhokp-mcp.tar` on the destination. For the rootful host deployment, load with `sudo podman load` into the same rootful image store used by Quadlet. Keep image archives outside the source repository.
+To transfer a built image without a registry, use `podman save --format docker-archive -o rhokp-mcp.tar localhost/rhokp-mcp:0.1.2` and `podman load -i rhokp-mcp.tar` on the destination. For the rootful host deployment, load with `sudo podman load` into the same rootful image store used by Quadlet. Keep image archives outside the source repository.
 
 The default base is `docker.io/library/python:3.12-slim`. For reproducible or
 disconnected builds, mirror an approved base and supply its immutable digest:
@@ -39,7 +39,7 @@ podman run -d --name rhokp-mcp --read-only --cap-drop=ALL \
   --security-opt=no-new-privileges --user 10001:0 \
   --secret rhokp-mcp-token,target=mcp_token,uid=10001,gid=0,mode=0400 \
   -e RHOKP_BASE_URL=http://portal.example.com:8080 \
-  -p 127.0.0.1:18081:18081 localhost/rhokp-mcp:0.1.1
+  -p 127.0.0.1:18081:18081 localhost/rhokp-mcp:0.1.2
 ```
 
 Replace the portal example with your internal service address. The process

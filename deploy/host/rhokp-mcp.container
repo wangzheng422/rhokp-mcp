@@ -6,7 +6,7 @@ After=rhokp.service
 
 [Container]
 # Replace with your own built/pinned MCP image when publishing to your registry.
-Image=ghcr.io/wangzheng422/rhokp-mcp:v0.1.1
+Image=ghcr.io/wangzheng422/rhokp-mcp:v0.1.2
 Pull=never
 ContainerName=rhokp-mcp
 Network=rhokp.network

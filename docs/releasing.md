@@ -22,7 +22,7 @@ Before the first release:
 
 1. Include the hidden `.github/` directory and the Apache-2.0 license in the repository root.
 2. Enable GitHub Actions and allow the workflow token to write repository contents and packages according to organization policy.
-3. Make the repository public, then publish a GitHub Release with a tag such as `v0.1.1`, including the workflow in that tagged commit. Creating a tag alone does not trigger this workflow.
+3. Make the repository public, then publish a GitHub Release with a tag such as `v0.1.2`, including the workflow in that tagged commit. Creating a tag alone does not trigger this workflow.
 4. Wait for the workflow to succeed. Confirm both Release assets and the versioned GHCR image exist.
 5. Review the GHCR package visibility and set it public if needed, then verify an unauthenticated pull. A public source repository does not by itself prove its container package is publicly readable.
 
@@ -37,7 +37,7 @@ The build runs on GitHub's hosted runner and requires access to the base-image r
 For development or an independently managed registry:
 
 ```bash
-MCP_IMAGE=registry.example.com/team/rhokp-mcp:0.1.1
+MCP_IMAGE=registry.example.com/team/rhokp-mcp:0.1.2
 podman build --format docker -f Containerfile -t "$MCP_IMAGE" .
 podman login registry.example.com
 podman push "$MCP_IMAGE"

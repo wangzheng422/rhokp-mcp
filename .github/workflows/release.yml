@@ -78,6 +78,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/mcp-release"
+          docker buildx create --name release-builder --driver docker-container --use
+          docker buildx inspect --bootstrap
           docker buildx build --platform linux/amd64 --file Containerfile \
             --label "org.opencontainers.image.source=https://github.com/$GH_REPO" \
             --label "org.opencontainers.image.version=$RELEASE_TAG" \
@@ -128,4 +130,4 @@ jobs:
       - name: Log out of GHCR
         if: always()
         shell: bash
-        run: if command -v skopeo >/dev/null; then skopeo logout ghcr.io; fi
+        run: if command -v skopeo >/dev/null; then skopeo logout ghcr.io || true; fi
