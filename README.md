@@ -67,17 +67,17 @@ The [release workflow](.github/workflows/release.yml) builds and tests the MCP i
 Download versioned builds from [GitHub Releases](https://github.com/wangzheng422/rhokp-mcp/releases) or pull from [GHCR](https://github.com/wangzheng422/rhokp-mcp/pkgs/container/rhokp-mcp). Assets appear after the release workflow completes successfully.
 
 ```bash
-podman pull ghcr.io/wangzheng422/rhokp-mcp:v0.1.0
+podman pull ghcr.io/wangzheng422/rhokp-mcp:v0.1.1
 ```
 
 For offline transfer, download the image from the release:
 
 ```bash
-gh release download v0.1.0 --repo wangzheng422/rhokp-mcp \
-  --pattern 'rhokp-mcp-v0.1.0-linux-amd64.tar.gz' --pattern SHA256SUMS
+gh release download v0.1.1 --repo wangzheng422/rhokp-mcp \
+  --pattern 'rhokp-mcp-v0.1.1-linux-amd64.tar.gz' --pattern SHA256SUMS
 sha256sum --check --ignore-missing SHA256SUMS
-gunzip rhokp-mcp-v0.1.0-linux-amd64.tar.gz
-podman load -i rhokp-mcp-v0.1.0-linux-amd64.tar
+gunzip rhokp-mcp-v0.1.1-linux-amd64.tar.gz
+podman load -i rhokp-mcp-v0.1.1-linux-amd64.tar
 ```
 
 For the rootful host deployment, use `sudo podman pull` or `sudo podman load`, then set the Quadlet `Image=` to the released image reference. For OpenShift, use its registry digest and ensure cluster pull access. Follow the [host guide](docs/host.md) or [OpenShift guide](docs/openshift.md) with your separately obtained RHoKP image and access key. [Local builds](docs/container.md) remain available for development and customization.

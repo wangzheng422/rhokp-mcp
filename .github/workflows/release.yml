@@ -77,13 +77,24 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          docker build --platform linux/amd64 --file Containerfile \
+          mkdir -p "$RUNNER_TEMP/mcp-release"
+          docker buildx build --platform linux/amd64 --file Containerfile \
             --label "org.opencontainers.image.source=https://github.com/$GH_REPO" \
             --label "org.opencontainers.image.version=$RELEASE_TAG" \
             --label "org.opencontainers.image.revision=$(git rev-parse HEAD)" \
-            --tag "$IMAGE" .
-          mkdir -p "$RUNNER_TEMP/mcp-release"
-          docker save "$IMAGE" | gzip -n > "$RUNNER_TEMP/mcp-release/$ARCHIVE"
+            --tag "$IMAGE" --provenance=false \
+            --output "type=docker,oci-mediatypes=false,dest=$RUNNER_TEMP/mcp-release/image.tar" .
+          python3 - <<'PY'
+          import json, os, tarfile
+          path = os.path.join(os.environ['RUNNER_TEMP'], 'mcp-release', 'image.tar')
+          with tarfile.open(path) as archive:
+              assert 'oci-layout' not in archive.getnames(), 'Expected Docker archive, not hybrid OCI layout'
+              manifest = json.load(archive.extractfile('manifest.json'))
+              config = json.load(archive.extractfile(manifest[0]['Config']))
+              assert config['config']['Healthcheck']['Test'], 'Missing image healthcheck'
+          print('docker_archive_healthcheck=PASS')
+          PY
+          gzip -n -c "$RUNNER_TEMP/mcp-release/image.tar" > "$RUNNER_TEMP/mcp-release/$ARCHIVE"
           git archive --format=tar --prefix="rhokp-mcp-$RELEASE_TAG/" HEAD | gzip -n > "$RUNNER_TEMP/mcp-release/$SOURCE_ARCHIVE"
           cd "$RUNNER_TEMP/mcp-release"
           sha256sum "$ARCHIVE" "$SOURCE_ARCHIVE" > SHA256SUMS
@@ -96,8 +107,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$REGISTRY_USER" --password-stdin
-          docker push "$IMAGE"
+          if ! command -v skopeo >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y skopeo
+          fi
+          printf '%s' "$GH_TOKEN" | skopeo login ghcr.io --username "$REGISTRY_USER" --password-stdin
+          skopeo copy --format v2s2 "docker-archive:$RUNNER_TEMP/mcp-release/image.tar" "docker://$IMAGE"
 
       - name: Upload offline release assets without overwriting
         shell: bash
@@ -113,4 +128,4 @@ jobs:
       - name: Log out of GHCR
         if: always()
         shell: bash
-        run: docker logout ghcr.io
+        run: if command -v skopeo >/dev/null; then skopeo logout ghcr.io; fi
