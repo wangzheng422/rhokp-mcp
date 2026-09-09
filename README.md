@@ -30,6 +30,8 @@ This repository provides deployment automation and an independently packaged MCP
 
 Both paths run RHoKP and MCP in their selected environment. OpenShift Services select cluster Pods; the OpenShift path does not require a host endpoint bridge.
 
+For a resource-by-resource explanation with Lightspeed configuration examples, read [OpenShift installed state and configuration](docs/openshift-installed-state.md).
+
 ```mermaid
 %%{ init: { "theme": "base", "themeVariables": { "background": "#FFFFFF", "primaryColor": "#F4F4F4", "primaryTextColor": "#151515", "primaryBorderColor": "#8A8D90", "lineColor": "#6A6E73", "secondaryColor": "#FFF0F0", "tertiaryColor": "#F8EAEA", "fontFamily": "Arial" }, "flowchart": { "defaultRenderer": "elk", "curve": "rounded", "nodeSpacing": 70, "rankSpacing": 90 } } }%%
 flowchart LR

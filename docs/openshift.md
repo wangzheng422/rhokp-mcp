@@ -2,6 +2,8 @@
 
 AI-Author: Codex (OpenAI model not exposed by runtime)
 
+Start with [OpenShift installed state and Lightspeed configuration](openshift-installed-state.md) if you want to see what is applied, how the components connect, and what a completed installation should look like before running scripts.
+
 This deploys the full Red Hat Offline Knowledge Portal and the separately built MCP container behind ClusterIP Services. It does not install OpenShift Lightspeed or expose a public Route. An entitled RHoKP image and access key are required; neither is included here.
 
 ## Prerequisites and installation
